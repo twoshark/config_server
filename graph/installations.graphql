@@ -1,0 +1,26 @@
+type Installation {
+  id: ID!
+  name: String!
+  description: String
+}
+
+input CreateInstallation {
+  id: ID!
+  name: String!
+  description: String
+}
+
+input UpdateInstallation {
+  id: ID!
+  name: String
+  description: String
+}
+
+extend type Query {
+  installation(id: ID!): Installation
+}
+
+extend type Mutation {
+  createInstallation(input: CreateInstallation!): Installation!
+  updateInstallation(input: UpdateInstallation!): Installation
+}

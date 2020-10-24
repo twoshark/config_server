@@ -1,0 +1,75 @@
+interface InterfaceFixture {
+  id: ID!
+  name: String
+  description: String
+  installations: [ID]
+  opacity: Int
+}
+
+input NewFixture {
+  id: ID!
+  name: String
+  description: String
+  installations: [ID]
+  opacity: Int
+  animation: Int
+  option: Int
+  speed: Int
+  strobe: Int
+}
+
+type Basic implements InterfaceFixture {
+  id: ID!
+  name: String
+  description: String
+  installations: [ID]
+  opacity: Int!
+  animation: Int!
+  option: Int!
+  speed: Int!
+  strobe: Int!
+}
+
+input UpdateBasic {
+  id: ID!
+  name: String
+  description: String
+  installations: [ID]
+  opacity: Int
+  animation: Int
+  option: Int
+  speed: Int
+  strobe: Int
+}
+
+type Spotlight implements InterfaceFixture {
+  id: ID!
+  name: String
+  description: String
+  installations: [ID]
+  opacity: Int
+}
+
+input UpdateSpotlight {
+  id: ID!
+  name: String
+  description: String
+  installations: [ID]
+  opacity: Int
+}
+
+
+union Fixture = Basic | Spotlight
+
+extend type Query {
+  fixtures: [Fixture!]!
+  fixture(id:ID!): Fixture
+}
+
+extend type Mutation {
+  createBasic(input: NewFixture!): Basic!
+  updateBasic(input: InputBasic!):  Basic
+  
+  createSpotlight(input: NewFixture!): Spotlight!
+  updateSpotlight(input: NewFixture!): Spotlight
+}
