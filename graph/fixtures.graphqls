@@ -11,11 +11,6 @@ input NewFixture {
   name: String
   description: String
   installations: [ID]
-  opacity: Int
-  animation: Int
-  option: Int
-  speed: Int
-  strobe: Int
 }
 
 type Basic implements InterfaceFixture {
@@ -62,14 +57,13 @@ input UpdateSpotlight {
 union Fixture = Basic | Spotlight
 
 extend type Query {
-  fixtures: [Fixture!]!
   fixture(id:ID!): Fixture
 }
 
 extend type Mutation {
   createBasic(input: NewFixture!): Basic!
-  updateBasic(input: InputBasic!):  Basic
+  updateBasic(input: UpdateBasic!):  Basic
   
   createSpotlight(input: NewFixture!): Spotlight!
-  updateSpotlight(input: NewFixture!): Spotlight
+  updateSpotlight(input: UpdateSpotlight!): Spotlight
 }
