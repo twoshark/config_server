@@ -57,6 +57,7 @@ input UpdateSpotlight {
 union Fixture = Basic | Spotlight
 
 extend type Query {
+  fixtures:[Fixture]
   fixture(id:ID!): Fixture
 }
 

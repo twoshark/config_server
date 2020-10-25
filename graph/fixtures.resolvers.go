@@ -66,14 +66,14 @@ func (r *mutationResolver) UpdateBasic(ctx context.Context, input model.UpdateBa
 	if fx.Type == fixture.Invalid {
 		return nil, errors.New("This Fixture Cannot Be Found")
 	}
-	updateString(input.Name, s.Fixtures.Basics[fx.Index].Name)
-	updateString(input.Description, s.Fixtures.Basics[fx.Index].Description)
-	updateStringArray(&input.Installations, &s.Fixtures.Basics[fx.Index].Installations)
-	updateInt(input.Opacity, &s.Fixtures.Basics[fx.Index].Opacity)
-	updateInt(input.Animation, &s.Fixtures.Basics[fx.Index].Animation)
-	updateInt(input.Option, &s.Fixtures.Basics[fx.Index].Option)
-	updateInt(input.Strobe, &s.Fixtures.Basics[fx.Index].Strobe)
-	updateInt(input.Speed, &s.Fixtures.Basics[fx.Index].Speed)
+	s.Fixtures.Basics[fx.Index].Name = updateString(input.Name, s.Fixtures.Basics[fx.Index].Name)
+	s.Fixtures.Basics[fx.Index].Description = updateString(input.Description, s.Fixtures.Basics[fx.Index].Description)
+	s.Fixtures.Basics[fx.Index].Installations = updateStringArray(input.Installations, s.Fixtures.Basics[fx.Index].Installations)
+	s.Fixtures.Basics[fx.Index].Opacity = *updateInt(input.Opacity, &s.Fixtures.Basics[fx.Index].Opacity)
+	s.Fixtures.Basics[fx.Index].Animation = *updateInt(input.Animation, &s.Fixtures.Basics[fx.Index].Animation)
+	s.Fixtures.Basics[fx.Index].Option = *updateInt(input.Option, &s.Fixtures.Basics[fx.Index].Option)
+	s.Fixtures.Basics[fx.Index].Strobe = *updateInt(input.Strobe, &s.Fixtures.Basics[fx.Index].Strobe)
+	s.Fixtures.Basics[fx.Index].Speed = *updateInt(input.Speed, &s.Fixtures.Basics[fx.Index].Speed)
 
 	return &s.Fixtures.Basics[fx.Index], nil
 }
@@ -85,12 +85,25 @@ func (r *mutationResolver) UpdateSpotlight(ctx context.Context, input model.Upda
 	if fx.Type == fixture.Invalid {
 		return nil, errors.New("This Fixture Cannot Be Found")
 	}
-	updateString(input.Name, s.Fixtures.Basics[fx.Index].Name)
-	updateString(input.Description, s.Fixtures.Basics[fx.Index].Description)
-	updateStringArray(&input.Installations, &s.Fixtures.Basics[fx.Index].Installations)
-	updateInt(input.Opacity, &s.Fixtures.Basics[fx.Index].Opacity)
+	s.Fixtures.Basics[fx.Index].Name = updateString(input.Name, s.Fixtures.Basics[fx.Index].Name)
+	s.Fixtures.Basics[fx.Index].Description = updateString(input.Description, s.Fixtures.Basics[fx.Index].Description)
+	s.Fixtures.Basics[fx.Index].Installations = updateStringArray(input.Installations, s.Fixtures.Basics[fx.Index].Installations)
+	s.Fixtures.Basics[fx.Index].Opacity = *updateInt(input.Opacity, &s.Fixtures.Basics[fx.Index].Opacity)
 
 	return &s.Fixtures.Spotlights[fx.Index], nil
+}
+
+func (r *queryResolver) Fixtures(ctx context.Context) ([]model.Fixture, error) {
+	s := store.GetStore()
+
+	fxs := make([]model.Fixture, 0, s.Fixtures.Count())
+	for _, b := range s.Fixtures.Basics {
+		fxs = append(fxs, b)
+	}
+	for _, s := range s.Fixtures.Spotlights {
+		fxs = append(fxs, s)
+	}
+	return fxs, nil
 }
 
 func (r *queryResolver) Fixture(ctx context.Context, id string) (model.Fixture, error) {

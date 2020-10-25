@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -70,8 +71,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Fixture      func(childComplexity int, id string) int
-		Installation func(childComplexity int, id string) int
+		Fixture       func(childComplexity int, id string) int
+		Fixtures      func(childComplexity int) int
+		Installation  func(childComplexity int, id string) int
+		Installations func(childComplexity int) int
 	}
 
 	Spotlight struct {
@@ -91,7 +94,9 @@ type MutationResolver interface {
 	UpdateInstallation(ctx context.Context, input model.UpdateInstallation) (*model.Installation, error)
 }
 type QueryResolver interface {
+	Fixtures(ctx context.Context) ([]model.Fixture, error)
 	Fixture(ctx context.Context, id string) (model.Fixture, error)
+	Installations(ctx context.Context) ([]*model.Installation, error)
 	Installation(ctx context.Context, id string) (*model.Installation, error)
 }
 
@@ -266,6 +271,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Fixture(childComplexity, args["id"].(string)), true
 
+	case "Query.fixtures":
+		if e.complexity.Query.Fixtures == nil {
+			break
+		}
+
+		return e.complexity.Query.Fixtures(childComplexity), true
+
 	case "Query.installation":
 		if e.complexity.Query.Installation == nil {
 			break
@@ -277,6 +289,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Installation(childComplexity, args["id"].(string)), true
+
+	case "Query.installations":
+		if e.complexity.Query.Installations == nil {
+			break
+		}
+
+		return e.complexity.Query.Installations(childComplexity), true
 
 	case "Spotlight.description":
 		if e.complexity.Spotlight.Description == nil {
@@ -436,6 +455,7 @@ input UpdateSpotlight {
 union Fixture = Basic | Spotlight
 
 extend type Query {
+  fixtures:[Fixture]
   fixture(id:ID!): Fixture
 }
 
@@ -452,7 +472,6 @@ extend type Mutation {
 }
 
 input CreateInstallation {
-  id: ID!
   name: String!
   description: String
 }
@@ -464,12 +483,13 @@ input UpdateInstallation {
 }
 
 extend type Query {
-  installation(id: ID!): Installation
+  installations: [Installation]!
+  installation(id: ID!): Installation!
 }
 
 extend type Mutation {
   createInstallation(input: CreateInstallation!): Installation!
-  updateInstallation(input: UpdateInstallation!): Installation
+  updateInstallation(input: UpdateInstallation!): Installation!
 }`, BuiltIn: false},
 	{Name: "graph/schema.graphqls", Input: ``, BuiltIn: false},
 }
@@ -1239,11 +1259,46 @@ func (ec *executionContext) _Mutation_updateInstallation(ctx context.Context, fi
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Installation)
 	fc.Result = res
-	return ec.marshalOInstallation2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐInstallation(ctx, field.Selections, res)
+	return ec.marshalNInstallation2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐInstallation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_fixtures(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Fixtures(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.Fixture)
+	fc.Result = res
+	return ec.marshalOFixture2ᚕgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐFixture(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_fixture(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1285,6 +1340,41 @@ func (ec *executionContext) _Query_fixture(ctx context.Context, field graphql.Co
 	return ec.marshalOFixture2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐFixture(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_installations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Installations(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Installation)
+	fc.Result = res
+	return ec.marshalNInstallation2ᚕᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐInstallation(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_installation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1317,11 +1407,14 @@ func (ec *executionContext) _Query_installation(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Installation)
 	fc.Result = res
-	return ec.marshalOInstallation2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐInstallation(ctx, field.Selections, res)
+	return ec.marshalNInstallation2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐInstallation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2651,14 +2744,6 @@ func (ec *executionContext) unmarshalInputCreateInstallation(ctx context.Context
 
 	for k, v := range asMap {
 		switch k {
-		case "id":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			it.ID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "name":
 			var err error
 
@@ -3074,6 +3159,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "updateInstallation":
 			out.Values[i] = ec._Mutation_updateInstallation(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3100,6 +3188,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "fixtures":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_fixtures(ctx, field)
+				return res
+			})
 		case "fixture":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -3111,6 +3210,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_fixture(ctx, field)
 				return res
 			})
+		case "installations":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_installations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "installation":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -3120,6 +3233,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_installation(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "__type":
@@ -3466,6 +3582,43 @@ func (ec *executionContext) marshalNInstallation2githubᚗcomᚋtwosharkᚋconfi
 	return ec._Installation(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNInstallation2ᚕᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐInstallation(ctx context.Context, sel ast.SelectionSet, v []*model.Installation) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOInstallation2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐInstallation(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) marshalNInstallation2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐInstallation(ctx context.Context, sel ast.SelectionSet, v *model.Installation) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -3791,6 +3944,46 @@ func (ec *executionContext) marshalOFixture2githubᚗcomᚋtwosharkᚋconfig_ser
 		return graphql.Null
 	}
 	return ec._Fixture(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOFixture2ᚕgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐFixture(ctx context.Context, sel ast.SelectionSet, v []model.Fixture) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOFixture2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐFixture(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) unmarshalOID2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {

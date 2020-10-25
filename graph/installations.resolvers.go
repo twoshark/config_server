@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/twoshark/config_server/graph/model"
@@ -15,12 +14,6 @@ import (
 
 func (r *mutationResolver) CreateInstallation(ctx context.Context, input model.CreateInstallation) (*model.Installation, error) {
 	s := store.GetStore()
-
-	found := s.Installations.FindByID(input.ID) > 0
-	if found {
-		return nil, errors.New("This ID Already Exists")
-	}
-
 	newInstallation := model.Installation{
 		ID:   uuid.Generate(uuid.Installation),
 		Name: input.Name,
@@ -32,6 +25,10 @@ func (r *mutationResolver) CreateInstallation(ctx context.Context, input model.C
 }
 
 func (r *mutationResolver) UpdateInstallation(ctx context.Context, input model.UpdateInstallation) (*model.Installation, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) Installations(ctx context.Context) ([]*model.Installation, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

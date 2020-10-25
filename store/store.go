@@ -67,6 +67,11 @@ func (f FixtureStore) GetFixture(fixIndex fixture.Index) model.Fixture {
 	}
 }
 
+//Count ...
+func (f FixtureStore) Count() int {
+	return len(f.Basics) + len(f.Spotlights)
+}
+
 //InstallationStore ...
 type InstallationStore []model.Installation
 

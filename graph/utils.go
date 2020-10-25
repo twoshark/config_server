@@ -1,17 +1,20 @@
 package graph
 
-func updateInt(update *int, original *int) {
+func updateInt(update *int, original *int) *int {
 	if update != nil {
-		*original = *update
+		return original
 	}
+	return update
 }
-func updateString(update *string, original *string) {
+func updateString(update *string, original *string) *string {
 	if update != nil {
-		*original = *update
+		return original
 	}
+	return update
 }
-func updateStringArray(update *[]*string, original *[]*string) {
+func updateStringArray(update []*string, original []*string) []*string {
 	if update != nil {
-		*original = *update
+		return original
 	}
+	return update
 }
