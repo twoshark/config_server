@@ -62,9 +62,8 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateBasic        func(childComplexity int, input model.NewFixture) int
+		CreateFixture      func(childComplexity int, input model.NewFixture) int
 		CreateInstallation func(childComplexity int, input model.CreateInstallation) int
-		CreateSpotlight    func(childComplexity int, input model.NewFixture) int
 		UpdateBasic        func(childComplexity int, input model.UpdateBasic) int
 		UpdateInstallation func(childComplexity int, input model.UpdateInstallation) int
 		UpdateSpotlight    func(childComplexity int, input model.UpdateSpotlight) int
@@ -85,9 +84,8 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateBasic(ctx context.Context, input model.NewFixture) (*model.Basic, error)
+	CreateFixture(ctx context.Context, input model.NewFixture) (model.Fixture, error)
 	UpdateBasic(ctx context.Context, input model.UpdateBasic) (*model.Basic, error)
-	CreateSpotlight(ctx context.Context, input model.NewFixture) (*model.Spotlight, error)
 	UpdateSpotlight(ctx context.Context, input model.UpdateSpotlight) (*model.Spotlight, error)
 	CreateInstallation(ctx context.Context, input model.CreateInstallation) (*model.Installation, error)
 	UpdateInstallation(ctx context.Context, input model.UpdateInstallation) (*model.Installation, error)
@@ -196,17 +194,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Installation.Name(childComplexity), true
 
-	case "Mutation.createBasic":
-		if e.complexity.Mutation.CreateBasic == nil {
+	case "Mutation.createFixture":
+		if e.complexity.Mutation.CreateFixture == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createBasic_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createFixture_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateBasic(childComplexity, args["input"].(model.NewFixture)), true
+		return e.complexity.Mutation.CreateFixture(childComplexity, args["input"].(model.NewFixture)), true
 
 	case "Mutation.createInstallation":
 		if e.complexity.Mutation.CreateInstallation == nil {
@@ -219,18 +217,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateInstallation(childComplexity, args["input"].(model.CreateInstallation)), true
-
-	case "Mutation.createSpotlight":
-		if e.complexity.Mutation.CreateSpotlight == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createSpotlight_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateSpotlight(childComplexity, args["input"].(model.NewFixture)), true
 
 	case "Mutation.updateBasic":
 		if e.complexity.Mutation.UpdateBasic == nil {
@@ -400,10 +386,10 @@ var sources = []*ast.Source{
 }
 
 input NewFixture {
-  id: ID!
   name: String
   description: String
   installations: [ID]
+  type: String
 }
 
 type Basic implements InterfaceFixture {
@@ -454,10 +440,9 @@ extend type Query {
 }
 
 extend type Mutation {
-  createBasic(input: NewFixture!): Basic!
-  updateBasic(input: UpdateBasic!):  Basic
+  createFixture(input: NewFixture!): Fixture!
   
-  createSpotlight(input: NewFixture!): Spotlight!
+  updateBasic(input: UpdateBasic!):  Basic
   updateSpotlight(input: UpdateSpotlight!): Spotlight
 }`, BuiltIn: false},
 	{Name: "graph/installations.graphqls", Input: `type Installation {
@@ -494,7 +479,7 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_createBasic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createFixture_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.NewFixture
@@ -516,21 +501,6 @@ func (ec *executionContext) field_Mutation_createInstallation_args(ctx context.C
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNCreateInstallation2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐCreateInstallation(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createSpotlight_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.NewFixture
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewFixture2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐNewFixture(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1075,7 +1045,7 @@ func (ec *executionContext) _Installation_description(ctx context.Context, field
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_createBasic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createFixture(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1092,7 +1062,7 @@ func (ec *executionContext) _Mutation_createBasic(ctx context.Context, field gra
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createBasic_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_createFixture_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1100,7 +1070,7 @@ func (ec *executionContext) _Mutation_createBasic(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateBasic(rctx, args["input"].(model.NewFixture))
+		return ec.resolvers.Mutation().CreateFixture(rctx, args["input"].(model.NewFixture))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1112,9 +1082,9 @@ func (ec *executionContext) _Mutation_createBasic(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Basic)
+	res := resTmp.(model.Fixture)
 	fc.Result = res
-	return ec.marshalNBasic2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐBasic(ctx, field.Selections, res)
+	return ec.marshalNFixture2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐFixture(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateBasic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1154,48 +1124,6 @@ func (ec *executionContext) _Mutation_updateBasic(ctx context.Context, field gra
 	res := resTmp.(*model.Basic)
 	fc.Result = res
 	return ec.marshalOBasic2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐBasic(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_createSpotlight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createSpotlight_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateSpotlight(rctx, args["input"].(model.NewFixture))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Spotlight)
-	fc.Result = res
-	return ec.marshalNSpotlight2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐSpotlight(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateSpotlight(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2759,14 +2687,6 @@ func (ec *executionContext) unmarshalInputNewFixture(ctx context.Context, obj in
 
 	for k, v := range asMap {
 		switch k {
-		case "id":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			it.ID, err = ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "name":
 			var err error
 
@@ -2788,6 +2708,14 @@ func (ec *executionContext) unmarshalInputNewFixture(ctx context.Context, obj in
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("installations"))
 			it.Installations, err = ec.unmarshalOID2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "type":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3130,18 +3058,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "createBasic":
-			out.Values[i] = ec._Mutation_createBasic(ctx, field)
+		case "createFixture":
+			out.Values[i] = ec._Mutation_createFixture(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "updateBasic":
 			out.Values[i] = ec._Mutation_updateBasic(ctx, field)
-		case "createSpotlight":
-			out.Values[i] = ec._Mutation_createSpotlight(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "updateSpotlight":
 			out.Values[i] = ec._Mutation_updateSpotlight(ctx, field)
 		case "createInstallation":
@@ -3494,20 +3417,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNBasic2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐBasic(ctx context.Context, sel ast.SelectionSet, v model.Basic) graphql.Marshaler {
-	return ec._Basic(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNBasic2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐBasic(ctx context.Context, sel ast.SelectionSet, v *model.Basic) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Basic(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3526,6 +3435,16 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 func (ec *executionContext) unmarshalNCreateInstallation2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐCreateInstallation(ctx context.Context, v interface{}) (model.CreateInstallation, error) {
 	res, err := ec.unmarshalInputCreateInstallation(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFixture2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐFixture(ctx context.Context, sel ast.SelectionSet, v model.Fixture) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Fixture(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
@@ -3575,20 +3494,6 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 func (ec *executionContext) unmarshalNNewFixture2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐNewFixture(ctx context.Context, v interface{}) (model.NewFixture, error) {
 	res, err := ec.unmarshalInputNewFixture(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNSpotlight2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐSpotlight(ctx context.Context, sel ast.SelectionSet, v model.Spotlight) graphql.Marshaler {
-	return ec._Spotlight(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNSpotlight2ᚖgithubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐSpotlight(ctx context.Context, sel ast.SelectionSet, v *model.Spotlight) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Spotlight(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

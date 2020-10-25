@@ -7,10 +7,10 @@ interface InterfaceFixture {
 }
 
 input NewFixture {
-  id: ID!
   name: String
   description: String
   installations: [ID]
+  type: String
 }
 
 type Basic implements InterfaceFixture {
@@ -61,9 +61,8 @@ extend type Query {
 }
 
 extend type Mutation {
-  createBasic(input: NewFixture!): Basic!
-  updateBasic(input: UpdateBasic!):  Basic
+  createFixture(input: NewFixture!): Fixture!
   
-  createSpotlight(input: NewFixture!): Spotlight!
+  updateBasic(input: UpdateBasic!):  Basic
   updateSpotlight(input: UpdateSpotlight!): Spotlight
 }

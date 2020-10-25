@@ -5,13 +5,30 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/twoshark/config_server/graph/model"
+	"github.com/twoshark/config_server/store"
+	"github.com/twoshark/config_server/uuid"
 )
 
 func (r *mutationResolver) CreateInstallation(ctx context.Context, input model.CreateInstallation) (*model.Installation, error) {
-	panic(fmt.Errorf("not implemented"))
+	s := store.GetStore()
+
+	found := s.Installations.FindByID(input.ID) > 0
+	if found {
+		return nil, errors.New("This ID Already Exists")
+	}
+
+	newInstallation := model.Installation{
+		ID:   uuid.Generate(uuid.Installation),
+		Name: input.Name,
+	}
+	updateString(input.Description, newInstallation.Description)
+
+	s.Installations = append(s.Installations, newInstallation)
+	return &newInstallation, nil
 }
 
 func (r *mutationResolver) UpdateInstallation(ctx context.Context, input model.UpdateInstallation) (*model.Installation, error) {
