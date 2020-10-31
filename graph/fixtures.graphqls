@@ -9,7 +9,7 @@ interface InterfaceFixture {
 input NewFixture {
   name: String
   description: String
-  installations: [ID]
+  installations: [ID]!
   type: String
 }
 

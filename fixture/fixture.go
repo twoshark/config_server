@@ -5,7 +5,7 @@ type Type string
 
 const (
 	//Basic Fixture
-	Basic Type = "Basic"
+	Basic Type = "Basic" 
 	//Spotlight Fixture
 	Spotlight = "Spotlight"
 	//Invalid Fixture

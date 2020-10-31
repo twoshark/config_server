@@ -4,6 +4,7 @@ package graph
 // will be copied through when generating and any unknown code will be moved to the end.
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -19,7 +20,8 @@ func (r *mutationResolver) CreateFixture(ctx context.Context, input model.NewFix
 	s := store.GetStore()
 
 	var t fixture.Type
-	err := json.Unmarshal([]byte(*input.Type), &t)
+	trimmed := bytes.TrimPrefix([]byte(*input.Type), []byte("\xef\xbb\xbf"))
+	err := json.Unmarshal(trimmed, &t)
 	if err != nil {
 		return nil, err
 	}

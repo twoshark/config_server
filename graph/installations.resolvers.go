@@ -18,7 +18,7 @@ func (r *mutationResolver) CreateInstallation(ctx context.Context, input model.C
 		ID:   uuid.Generate(uuid.Installation),
 		Name: input.Name,
 	}
-	updateString(input.Description, newInstallation.Description)
+	newInstallation.Description = updateString(input.Description, newInstallation.Description)
 
 	s.Installations = append(s.Installations, newInstallation)
 	return &newInstallation, nil
@@ -29,7 +29,13 @@ func (r *mutationResolver) UpdateInstallation(ctx context.Context, input model.U
 }
 
 func (r *queryResolver) Installations(ctx context.Context) ([]*model.Installation, error) {
-	panic(fmt.Errorf("not implemented"))
+	s := store.GetStore()
+
+	ptrs := make([]*model.Installation, len(s.Installations))
+	for i := range s.Installations {
+		ptrs[i] = &s.Installations[i]
+	}
+	return ptrs, nil
 }
 
 func (r *queryResolver) Installation(ctx context.Context, id string) (*model.Installation, error) {

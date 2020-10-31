@@ -407,7 +407,7 @@ var sources = []*ast.Source{
 input NewFixture {
   name: String
   description: String
-  installations: [ID]
+  installations: [ID]!
   type: String
 }
 
@@ -2792,7 +2792,7 @@ func (ec *executionContext) unmarshalInputNewFixture(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("installations"))
-			it.Installations, err = ec.unmarshalOID2ᚕᚖstring(ctx, v)
+			it.Installations, err = ec.unmarshalNID2ᚕᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3576,6 +3576,36 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNID2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOID2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNID2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOID2ᚖstring(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNInstallation2githubᚗcomᚋtwosharkᚋconfig_serverᚋgraphᚋmodelᚐInstallation(ctx context.Context, sel ast.SelectionSet, v model.Installation) graphql.Marshaler {
